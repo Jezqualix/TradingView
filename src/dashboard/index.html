@@ -363,15 +363,6 @@
       }
     }
 
-    function esc(str) {
-      if (str == null) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
 
     function formatVol(v) {
       if (v == null) return '—';
@@ -462,7 +453,7 @@
           lbl.textContent = s.label;
           const val = document.createElement('span');
           val.className = 'stat-value' + (s.cls ? ' ' + s.cls : '');
-          val.textContent = s.raw != null ? s.raw : ('$' + formatPrice(s.value));
+          val.textContent = s.raw != null ? s.raw : (s.value != null ? '$' + formatPrice(s.value) : '—');
           stat.appendChild(lbl);
           stat.appendChild(val);
           statGrid.appendChild(stat);
