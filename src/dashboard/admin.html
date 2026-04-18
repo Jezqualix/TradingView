@@ -998,6 +998,7 @@
           typeInputs.forEach(input => {
             input.checked = input.value === assetType;
           });
+          loadExchangeDropdown(assetType, data.exchange || '');
 
           statusSpan.textContent = '✓';
           setTimeout(() => {
