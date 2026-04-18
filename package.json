@@ -1,0 +1,19 @@
+{
+  "name": "tradingview-claude",
+  "version": "1.0.0",
+  "description": "TradingView x Claude paper trading system",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "init-db": "node src/initDb.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mssql": "^11.0.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "yahoo-finance2": "^2.8.1"
+  }
+}

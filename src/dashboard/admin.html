@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradingView × Claude — Beheer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Admin Page — Beheer
+       Same design system as dashboard
+       ============================================================ */
+
+    :root {
+      --brand-600: #007c30;
+      --brand-700: #026c3d;
+      --brand-900: #003012;
+      --accent: #ffdd00;
+      --accent-hover: #e6c800;
+
+      --bg: #0f1612;
+      --bg-card: #1a2420;
+      --bg-header: #0a0f0c;
+
+      --text-primary: #f0f0f0;
+      --text-body: #c8c8c8;
+      --text-muted: #888888;
+      --text-on-dark: #f0f0f0;
+
+      --border: #2a3830;
+      --border-card: #2a3830;
+      --shadow-card: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+      --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
+
+      --radius: 12px;
+      --radius-sm: 6px;
+      --radius-pill: 9999px;
+
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --transition: 0.18s ease;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      background-color: var(--bg);
+      color: var(--text-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background-color: var(--bg-header);
+      border-bottom: 3px solid var(--accent);
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-card);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      color: var(--brand-600);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .header-links {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .header-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-radius: var(--radius-pill);
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-link:hover {
+      background: rgba(0, 160, 64, 0.1);
+      color: var(--brand-600);
+    }
+
+    /* Main layout */
+    .container {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-card);
+      padding: 24px 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 12px 16px 6px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-item {
+      padding: 12px 16px;
+      margin: 4px 8px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-body);
+      font-weight: 500;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 160, 64, 0.1);
+      color: var(--brand-600);
+    }
+
+    .sidebar-item.active {
+      background: var(--brand-600);
+      color: var(--text-on-dark);
+    }
+
+    .sidebar-badge {
+      font-size: 0.7rem;
+      background: rgba(255, 221, 0, 0.2);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .sidebar-item.active .sidebar-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-on-dark);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 12px;
+      border-top: 1px solid var(--border-card);
+      font-size: 0.85rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .sidebar-footer a {
+      color: var(--brand-600);
+      text-decoration: none;
+      display: block;
+      padding: 8px;
+      border-radius: var(--radius);
+      transition: all var(--transition);
+    }
+
+    .sidebar-footer a:hover {
+      background: rgba(0, 160, 64, 0.1);
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 20px;
+    }
+
+    .table-header h2 {
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .table-header .info {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .btn-new-container {
+      margin-left: 16px;
+    }
+
+    .table-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+      sticky: true;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:hover {
+      background: rgba(0, 160, 64, 0.05);
+    }
+
+    .cell-small {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .cell-actions {
+      display: flex;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-edit {
+      background: rgba(0, 160, 64, 0.2);
+      color: var(--brand-600);
+      border: 1px solid var(--brand-600);
+    }
+
+    .btn-edit:hover:not(:disabled) {
+      background: var(--brand-600);
+      color: var(--text-on-dark);
+    }
+
+    .btn-delete {
+      background: rgba(255, 100, 100, 0.2);
+      color: #ff6464;
+      border: 1px solid #ff6464;
+    }
+
+    .btn-delete:hover:not(:disabled) {
+      background: #ff6464;
+      color: var(--text-on-dark);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      border-top: 1px solid var(--border-card);
+    }
+
+    .page-button {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-body);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .page-button:hover:not(:disabled) {
+      background: var(--brand-600);
+      color: var(--text-on-dark);
+      border-color: var(--brand-600);
+    }
+
+    .page-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .page-button.active {
+      background: var(--brand-600);
+      color: var(--text-on-dark);
+      border-color: var(--brand-600);
+    }
+
+    .page-info {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin: 0 12px;
+    }
+
+    .empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-hover);
+      width: 90%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .modal-header h3 {
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.5rem;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition);
+    }
+
+    .modal-close:hover {
+      background: rgba(0, 160, 64, 0.1);
+      color: var(--brand-600);
+    }
+
+    .modal-body {
+      padding: 24px;
+      flex: 1;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: var(--font);
+      transition: all var(--transition);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--brand-600);
+      box-shadow: 0 0 0 3px rgba(0, 160, 64, 0.1);
+    }
+
+    .form-group input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-group.radio {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .form-group.radio label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .form-group.radio input[type="radio"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .form-group.checkbox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .form-group.checkbox input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 20px 24px;
+      border-top: 1px solid var(--border-card);
+    }
+
+    .modal-footer button {
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 0.9rem;
+    }
+
+    .modal-footer .btn-cancel {
+      background: transparent;
+      color: var(--text-body);
+    }
+
+    .modal-footer .btn-cancel:hover {
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-primary);
+    }
+
+    .modal-footer .btn-save {
+      background: var(--brand-600);
+      color: var(--text-on-dark);
+      border-color: var(--brand-600);
+    }
+
+    .modal-footer .btn-save:hover {
+      background: var(--brand-700);
+      border-color: var(--brand-700);
+    }
+
+    .btn-new {
+      background: var(--brand-600);
+      color: var(--text-on-dark);
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-new:hover {
+      background: var(--brand-700);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { width: 200px; }
+      .main { padding: 20px; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 8px 12px; }
+    }
+
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-card); }
+      .main { padding: 16px; }
+      .table-header { flex-direction: column; gap: 8px; }
+      table { font-size: 0.75rem; }
+      th, td { padding: 6px 8px; }
+      .sidebar-item { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TradingView <span>×</span> Claude — <span style="color: var(--text-muted);">Beheer</span></h1>
+    <div class="header-links">
+      <a href="/dashboard.html" class="header-link">← Dashboard</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Database</div>
+        <div class="sidebar-item active" data-table="signals">
+          Signals
+          <span class="sidebar-badge" id="count-signals">0</span>
+        </div>
+        <div class="sidebar-item" data-table="decisions">
+          Decisions
+          <span class="sidebar-badge" id="count-decisions">0</span>
+        </div>
+        <div class="sidebar-item" data-table="positions">
+          Positions
+          <span class="sidebar-badge" id="count-positions">0</span>
+        </div>
+        <div class="sidebar-item" data-table="portfolio">
+          Portfolio
+          <span class="sidebar-badge" id="count-portfolio">0</span>
+        </div>
+        <div class="sidebar-item" data-table="strategies">
+          Strategies
+          <span class="sidebar-badge" id="count-strategies">0</span>
+        </div>
+        <div class="sidebar-item" data-table="memory">
+          Memory
+          <span class="sidebar-badge" id="count-memory">0</span>
+        </div>
+        <div class="sidebar-item" data-table="tickers">
+          Tickers
+          <span class="sidebar-badge" id="count-tickers">0</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="/dashboard.html">← Terug naar Dashboard</a>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div class="table-header">
+        <h2 id="table-title">Signals</h2>
+        <div class="info">
+          <span id="table-info">0 rijen</span>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-wrapper" id="table-container">
+          <table id="main-table">
+            <thead></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal for ticker edit/create -->
+  <div class="modal-overlay" id="tickerModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">Ticker toevoegen</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="tickerSymbol">Symbool *</label>
+          <div style="position: relative;">
+            <input type="text" id="tickerSymbol" placeholder="Bijv. BTCUSDT, AAPL" required>
+            <span id="tickerLookupStatus" style="display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: var(--text-muted);">Zoeken...</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="tickerName">Naam</label>
+          <input type="text" id="tickerName" placeholder="Bijv. Bitcoin, Apple Inc.">
+        </div>
+        <div class="form-group radio">
+          <label>Type *</label>
+          <label>
+            <input type="radio" name="tickerType" value="STOCK" checked> STOCK
+          </label>
+          <label>
+            <input type="radio" name="tickerType" value="CRYPTO"> CRYPTO
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="tickerExchange">Exchange</label>
+          <input type="text" id="tickerExchange" placeholder="Bijv. NASDAQ, BINANCE">
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="tickerActive" checked>
+          <label for="tickerActive" style="margin: 0; cursor: pointer;">Actief</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Annuleer</button>
+        <button class="btn-save" onclick="saveTicker()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/admin';
+    let currentTable = 'signals';
+    let currentPage = 1;
+    let tableData = {};
+
+    const tableColumns = {
+      signals: {
+        title: 'Signals',
+        columns: ['id', 'symbol', 'action', 'price', 'interval', 'rsi', 'macd', 'received_at'],
+        actions: null,
+        editable: false,
+      },
+      decisions: {
+        title: 'Decisions',
+        columns: ['id', 'signal_id', 'decision', 'confidence', 'reasoning', 'decided_at'],
+        actions: null,
+        editable: false,
+      },
+      positions: {
+        title: 'Positions',
+        columns: ['id', 'symbol', 'side', 'amount_usd', 'entry_price', 'exit_price', 'pnl_usd', 'status', 'opened_at', 'closed_at'],
+        actions: null,
+        editable: false,
+      },
+      portfolio: {
+        title: 'Portfolio',
+        columns: ['id', 'starting_balance', 'current_balance', 'total_trades', 'winning_trades', 'snapshot_at'],
+        actions: ['edit'],
+        editable: false,
+      },
+      strategies: {
+        title: 'Strategies',
+        columns: ['id', 'name', 'description', 'indicators', 'asset_type', 'claimed_win_rate', 'skepticism_score', 'last_updated'],
+        actions: ['edit', 'delete'],
+        editable: false,
+      },
+      memory: {
+        title: 'Claude Memory',
+        columns: ['id', 'symbol', 'asset_type', 'insight', 'source', 'confidence', 'created_at'],
+        actions: ['delete'],
+        editable: false,
+      },
+      tickers: {
+        title: 'Tickers',
+        columns: ['id', 'symbol', 'name', 'asset_type', 'exchange', 'is_active', 'created_at'],
+        actions: ['edit', 'delete'],
+        editable: true,
+      },
+    };
+
+    function fmt(val) {
+      if (!val) return '—';
+      if (typeof val === 'string' && val.match(/^\d{4}-\d{2}-\d{2}/)) {
+        const d = new Date(val);
+        return d.toLocaleDateString('nl-BE') + ' ' + d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+      }
+      if (typeof val === 'number') {
+        if (val > 1000000) return (val / 1000000).toFixed(1) + 'M';
+        if (val > 1000) return (val / 1000).toFixed(1) + 'K';
+        return val.toFixed(2);
+      }
+      if (typeof val === 'string' && val.length > 80) return val.slice(0, 77) + '...';
+      return val;
+    }
+
+    async function loadCounts() {
+      try {
+        const data = await fetch(API + '/counts').then(r => r.json());
+        document.getElementById('count-signals').textContent = data.signals || 0;
+        document.getElementById('count-decisions').textContent = data.decisions || 0;
+        document.getElementById('count-positions').textContent = data.positions || 0;
+        document.getElementById('count-portfolio').textContent = data.portfolio || 0;
+        document.getElementById('count-strategies').textContent = data.strategies || 0;
+        document.getElementById('count-memory').textContent = data.claude_memory || 0;
+        document.getElementById('count-tickers').textContent = data.tickers || 0;
+      } catch (err) {
+        console.error('Failed to load counts:', err);
+      }
+    }
+
+    async function loadTable(table, page = 1) {
+      currentTable = table;
+      currentPage = page;
+
+      try {
+        const data = await fetch(`${API}/${table}?page=${page}`).then(r => r.json());
+        tableData = data;
+        renderTable(table, data);
+        renderPagination(data.pages, data.page);
+      } catch (err) {
+        const tbody = document.getElementById('table-body');
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 10;
+        cell.className = 'empty';
+        cell.textContent = 'Fout bij het laden: ' + err.message;
+      }
+    }
+
+    function renderTable(table, { data, total }) {
+      const cfg = tableColumns[table];
+      const thead = document.querySelector('#main-table thead');
+      const tbody = document.getElementById('table-body');
+      const headerEl = document.querySelector('.table-header');
+
+      document.getElementById('table-title').textContent = cfg.title;
+      document.getElementById('table-info').textContent = `${total} rij${total !== 1 ? 'en' : ''}`;
+
+      // Add "+ Nieuw" button for tickers
+      const newBtnContainer = headerEl.querySelector('.btn-new-container');
+      if (newBtnContainer) newBtnContainer.remove();
+      if (table === 'tickers') {
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'btn-new-container';
+        const btn = document.createElement('button');
+        btn.className = 'btn-new';
+        btn.textContent = '+ Nieuw';
+        btn.onclick = () => openModal('create');
+        btnDiv.appendChild(btn);
+        document.querySelector('.table-header').appendChild(btnDiv);
+      }
+
+      // Build header
+      const headerRow = document.createElement('tr');
+      cfg.columns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col.replace(/_/g, ' ').toUpperCase();
+        headerRow.appendChild(th);
+      });
+      if (cfg.actions) {
+        const th = document.createElement('th');
+        th.textContent = 'ACTIES';
+        headerRow.appendChild(th);
+      }
+      thead.innerHTML = '';
+      thead.appendChild(headerRow);
+
+      // Build rows
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = cfg.columns.length + (cfg.actions ? 1 : 0);
+        cell.className = 'empty';
+        cell.textContent = 'Geen rijen';
+        return;
+      }
+
+      data.forEach(rowData => {
+        const row = tbody.insertRow();
+        cfg.columns.forEach(col => {
+          const cell = row.insertCell();
+          cell.className = 'cell-small';
+          cell.textContent = fmt(rowData[col]);
+        });
+        if (cfg.actions) {
+          const cell = row.insertCell();
+          cell.className = 'cell-actions';
+          const div = document.createElement('div');
+          div.className = 'cell-actions';
+          cfg.actions.forEach(action => {
+            const btn = document.createElement('button');
+            btn.className = `btn btn-${action}`;
+            btn.disabled = !cfg.editable;
+            if (!cfg.editable) btn.title = 'Binnenkort beschikbaar';
+            const icon = action === 'edit' ? '🖊️' : '🗑️';
+            const label = action === 'edit' ? 'Bewerk' : 'Verwijder';
+            btn.textContent = icon + ' ' + label;
+            if (cfg.editable) {
+              if (action === 'edit') {
+                btn.onclick = () => openModal('edit', rowData);
+              } else if (action === 'delete') {
+                btn.onclick = () => deleteTicker(rowData.id, rowData.symbol);
+              }
+            }
+            div.appendChild(btn);
+          });
+          cell.appendChild(div);
+        }
+      });
+    }
+
+    function renderPagination(pages, currentPageNum) {
+      const el = document.getElementById('pagination');
+      if (pages <= 1) { el.innerHTML = ''; return; }
+
+      el.innerHTML = '';
+
+      const btnFirst = document.createElement('button');
+      btnFirst.className = 'page-button';
+      btnFirst.textContent = '«';
+      btnFirst.onclick = () => loadTable(currentTable, 1);
+      el.appendChild(btnFirst);
+
+      if (currentPageNum > 1) {
+        const btnPrev = document.createElement('button');
+        btnPrev.className = 'page-button';
+        btnPrev.textContent = '‹';
+        btnPrev.onclick = () => loadTable(currentTable, currentPageNum - 1);
+        el.appendChild(btnPrev);
+      }
+
+      for (let i = 1; i <= pages; i++) {
+        if (i === currentPageNum) {
+          const btn = document.createElement('button');
+          btn.className = 'page-button active';
+          btn.textContent = i;
+          btn.disabled = true;
+          el.appendChild(btn);
+        } else if (pages <= 7 || i <= 2 || i >= pages - 1 || (i >= currentPageNum - 1 && i <= currentPageNum + 1)) {
+          const btn = document.createElement('button');
+          btn.className = 'page-button';
+          btn.textContent = i;
+          btn.onclick = () => loadTable(currentTable, i);
+          el.appendChild(btn);
+        } else if (i === 3) {
+          const span = document.createElement('span');
+          span.className = 'page-info';
+          span.textContent = '…';
+          el.appendChild(span);
+        }
+      }
+
+      if (currentPageNum < pages) {
+        const btnNext = document.createElement('button');
+        btnNext.className = 'page-button';
+        btnNext.textContent = '›';
+        btnNext.onclick = () => loadTable(currentTable, currentPageNum + 1);
+        el.appendChild(btnNext);
+      }
+
+      const btnLast = document.createElement('button');
+      btnLast.className = 'page-button';
+      btnLast.textContent = '»';
+      btnLast.onclick = () => loadTable(currentTable, pages);
+      el.appendChild(btnLast);
+
+      const info = document.createElement('span');
+      info.className = 'page-info';
+      info.textContent = `Pagina ${currentPageNum} van ${pages}`;
+      el.appendChild(info);
+    }
+
+    let modalMode = 'create';
+    let modalTickerId = null;
+
+    async function lookupTicker(symbol) {
+      if (!symbol || symbol.trim().length === 0) return;
+
+      const symbolInput = document.getElementById('tickerSymbol');
+      const nameInput = document.getElementById('tickerName');
+      const exchangeInput = document.getElementById('tickerExchange');
+      const typeInputs = document.querySelectorAll('input[name="tickerType"]');
+      const statusSpan = document.getElementById('tickerLookupStatus');
+
+      statusSpan.style.display = 'inline';
+      statusSpan.textContent = '⏳';
+
+      try {
+        const res = await fetch(`${API.replace('/api/admin', '')}/api/lookup-ticker?symbol=${encodeURIComponent(symbol)}`);
+        const data = await res.json();
+
+        if (data && data.symbol) {
+          nameInput.value = data.name || '';
+          exchangeInput.value = data.exchange || '';
+
+          // Set asset type based on isCrypto flag
+          const assetType = data.isCrypto ? 'CRYPTO' : 'STOCK';
+          typeInputs.forEach(input => {
+            input.checked = input.value === assetType;
+          });
+
+          statusSpan.textContent = '✓';
+          setTimeout(() => {
+            statusSpan.style.display = 'none';
+          }, 1500);
+        } else {
+          statusSpan.textContent = '?';
+          setTimeout(() => {
+            statusSpan.style.display = 'none';
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Lookup failed:', err);
+        statusSpan.textContent = '✗';
+        setTimeout(() => {
+          statusSpan.style.display = 'none';
+        }, 2000);
+      }
+    }
+
+    function openModal(mode, rowData = null) {
+      modalMode = mode;
+      const modal = document.getElementById('tickerModal');
+      const title = document.getElementById('modalTitle');
+      const symbolInput = document.getElementById('tickerSymbol');
+      const nameInput = document.getElementById('tickerName');
+      const exchangeInput = document.getElementById('tickerExchange');
+      const activeCheckbox = document.getElementById('tickerActive');
+      const typeInputs = document.querySelectorAll('input[name="tickerType"]');
+
+      if (mode === 'create') {
+        title.textContent = 'Ticker toevoegen';
+        symbolInput.value = '';
+        nameInput.value = '';
+        exchangeInput.value = '';
+        activeCheckbox.checked = true;
+        typeInputs[0].checked = true;
+        modalTickerId = null;
+      } else if (mode === 'edit' && rowData) {
+        title.textContent = 'Ticker bewerken';
+        symbolInput.value = rowData.symbol || '';
+        nameInput.value = rowData.name || '';
+        exchangeInput.value = rowData.exchange || '';
+        activeCheckbox.checked = rowData.is_active;
+        typeInputs.forEach(input => {
+          input.checked = input.value === (rowData.asset_type || 'STOCK');
+        });
+        modalTickerId = rowData.id;
+      }
+
+      modal.classList.add('active');
+      symbolInput.focus();
+
+      // Add blur listener for symbol lookup
+      symbolInput.onblur = () => {
+        if (symbolInput.value.trim().length > 0 && mode === 'create') {
+          lookupTicker(symbolInput.value.trim());
+        }
+      };
+
+      // Close on Escape
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('tickerModal');
+      modal.classList.remove('active');
+      modalMode = 'create';
+      modalTickerId = null;
+    }
+
+    async function saveTicker() {
+      const symbolInput = document.getElementById('tickerSymbol');
+      const nameInput = document.getElementById('tickerName');
+      const exchangeInput = document.getElementById('tickerExchange');
+      const activeCheckbox = document.getElementById('tickerActive');
+      const typeInput = document.querySelector('input[name="tickerType"]:checked');
+
+      const symbol = symbolInput.value.trim();
+      if (!symbol) {
+        alert('Symbool is verplicht');
+        return;
+      }
+
+      const payload = {
+        symbol: symbol,
+        name: nameInput.value.trim() || null,
+        asset_type: typeInput.value,
+        exchange: exchangeInput.value.trim() || null,
+        is_active: activeCheckbox.checked,
+      };
+
+      try {
+        const method = modalMode === 'create' ? 'POST' : 'PUT';
+        const url = modalMode === 'create' ? `${API}/tickers` : `${API}/tickers/${modalTickerId}`;
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert('Fout: ' + (err.error || 'Onbekende fout'));
+          return;
+        }
+
+        closeModal();
+        loadCounts();
+        loadTable('tickers', currentPage);
+      } catch (err) {
+        alert('Fout: ' + err.message);
+      }
+    }
+
+    async function deleteTicker(id, symbol) {
+      if (!confirm(`Weet je zeker dat je ticker "${symbol}" wilt verwijderen?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/tickers/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert('Fout: ' + (err.error || 'Onbekende fout'));
+          return;
+        }
+
+        loadCounts();
+        loadTable('tickers', currentPage);
+      } catch (err) {
+        alert('Fout: ' + err.message);
+      }
+    }
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        loadTable(item.dataset.table, 1);
+      });
+    });
+
+    loadCounts();
+    loadTable('signals', 1);
+  </script>
+</body>
+</html>

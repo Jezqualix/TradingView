@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradingView × Claude — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       TradingView × Claude — Dashboard Styles
+       Aligned with HoofdSite/Wachtdiensten design system
+       ============================================================ */
+
+    /* CSS Variables (dark mode) */
+    :root {
+      --brand-600: #007c30;
+      --brand-700: #026c3d;
+      --brand-900: #003012;
+      --accent: #ffdd00;
+      --accent-hover: #e6c800;
+      --accent-light: #2a2500;
+
+      --bg: #0f1612;
+      --bg-card: #1a2420;
+      --bg-header: #0a0f0c;
+
+      --text-primary: #f0f0f0;
+      --text-body: #c8c8c8;
+      --text-muted: #888888;
+      --text-on-dark: #f0f0f0;
+
+      --border: #2a3830;
+      --border-card: #2a3830;
+      --shadow-card: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+      --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
+
+      --radius: 12px;
+      --radius-sm: 6px;
+      --radius-pill: 9999px;
+
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --transition: 0.18s ease;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      background-color: var(--bg);
+      color: var(--text-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* Header */
+    header {
+      background-color: var(--bg-header);
+      border-bottom: 3px solid var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-card);
+    }
+
+    header h1 {
+      color: var(--brand-600);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .refresh-info {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      padding: 24px 32px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-top: 3px solid var(--brand-600);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      transition: all var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+      border-top-color: var(--accent);
+    }
+
+    .stat-card .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-card .value {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--brand-600);
+    }
+
+    .stat-card .value.yellow { color: var(--accent); }
+    .stat-card .value.red { color: #ff4444; }
+
+    /* Panels Container */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 0 32px 32px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: all var(--transition);
+    }
+
+    .panel:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    .panel.full-width { grid-column: 1 / -1; }
+
+    .panel-header {
+      background: linear-gradient(135deg, var(--brand-900), var(--bg-header));
+      padding: 16px 20px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--brand-600);
+      border-bottom: 1px solid var(--border-card);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-body {
+      padding: 16px 20px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .panel-body::-webkit-scrollbar { width: 8px; }
+    .panel-body::-webkit-scrollbar-track { background: var(--bg-card); }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .panel-body::-webkit-scrollbar-thumb:hover { background: var(--border-card); }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all var(--transition);
+    }
+
+    .badge-trade { background: var(--brand-600); color: var(--text-on-dark); }
+    .badge-skip { background: rgba(200,200,200,0.15); color: var(--text-muted); }
+    .badge-buy { background: var(--brand-700); color: var(--text-on-dark); }
+    .badge-sell { background: #cc3333; color: var(--text-on-dark); }
+    .badge-open { background: var(--accent); color: var(--brand-900); font-weight: 700; }
+    .badge-closed { background: rgba(100,100,100,0.2); color: var(--text-muted); }
+
+    /* Confidence Bar */
+    .confidence-bar {
+      width: 60px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 8px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--brand-600);
+    }
+
+    /* P&L Indicators */
+    .pnl-positive { color: var(--brand-600); font-weight: 700; }
+    .pnl-negative { color: #ff6666; font-weight: 700; }
+
+    /* Reasoning Text */
+    .reasoning {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: help;
+    }
+
+    .reasoning:hover {
+      color: var(--text-body);
+    }
+
+    /* Memory Items */
+    .memory-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .memory-item:last-child { border-bottom: none; }
+
+    .memory-item .insight {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .memory-item .meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Empty State */
+    .empty {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 32px 16px;
+      text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .panels { grid-template-columns: 1fr; gap: 16px; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      header { padding: 16px 20px; flex-direction: column; gap: 12px; }
+      header h1 { font-size: 1.2rem; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-bar { grid-template-columns: 1fr; }
+      .panels, .stats-bar { padding-left: 16px; padding-right: 16px; }
+      header { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TradingView <span>x</span> Claude</h1>
+    <div class="refresh-info">Auto-refresh: 30s</div>
+  </header>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="panels">
+    <div class="panel full-width">
+      <div class="panel-header">Recent Decisions</div>
+      <div class="panel-body" id="decisions-panel"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Open Positions</div>
+      <div class="panel-body" id="positions-panel"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Claude Memory</div>
+      <div class="panel-body" id="memory-panel"></div>
+    </div>
+
+    <div class="panel full-width">
+      <div class="panel-header">Strategy Library</div>
+      <div class="panel-body" id="strategies-panel"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+
+    function fmt(date) {
+      if (!date) return '—';
+      const d = new Date(date);
+      return d.toLocaleDateString('nl-BE') + ' ' + d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function pnlClass(val) {
+      if (val > 0) return 'pnl-positive';
+      if (val < 0) return 'pnl-negative';
+      return '';
+    }
+
+    async function fetchJSON(url) {
+      try {
+        const res = await fetch(url);
+        return await res.json();
+      } catch { return null; }
+    }
+
+    async function renderStats() {
+      const portfolio = await fetchJSON(API + '/api/portfolio');
+      const positions = await fetchJSON(API + '/api/positions');
+      const decisions = await fetchJSON(API + '/api/decisions');
+
+      if (!portfolio) return;
+
+      const openCount = positions ? positions.filter(p => p.status === 'OPEN').length : 0;
+      const todayDecisions = decisions ? decisions.filter(d => {
+        const dt = new Date(d.decided_at);
+        const now = new Date();
+        return dt.toDateString() === now.toDateString();
+      }).length : 0;
+      const avgConf = decisions && decisions.length > 0
+        ? Math.round(decisions.reduce((s, d) => s + d.confidence, 0) / decisions.length)
+        : 0;
+      const winRate = portfolio.total_trades > 0
+        ? ((portfolio.winning_trades / portfolio.total_trades) * 100).toFixed(1)
+        : '0.0';
+      const pnl = portfolio.current_balance - portfolio.starting_balance;
+
+      document.getElementById('stats-bar').innerHTML = `
+        <div class="stat-card"><div class="label">Balance</div><div class="value">$${Number(portfolio.current_balance).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="label">P&L</div><div class="value ${pnl >= 0 ? '' : 'red'}">$${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}</div></div>
+        <div class="stat-card"><div class="label">Win Rate</div><div class="value yellow">${winRate}%</div></div>
+        <div class="stat-card"><div class="label">Open Positions</div><div class="value">${openCount}</div></div>
+        <div class="stat-card"><div class="label">Decisions Today</div><div class="value">${todayDecisions}</div></div>
+        <div class="stat-card"><div class="label">Avg Confidence</div><div class="value yellow">${avgConf}%</div></div>
+      `;
+    }
+
+    async function renderDecisions() {
+      const decisions = await fetchJSON(API + '/api/decisions');
+      const el = document.getElementById('decisions-panel');
+      if (!decisions || decisions.length === 0) { el.innerHTML = '<div class="empty">No decisions yet</div>'; return; }
+
+      el.innerHTML = `<table>
+        <tr><th>Time</th><th>Symbol</th><th>Action</th><th>Decision</th><th>Confidence</th><th>Reasoning</th><th>Strategy</th></tr>
+        ${decisions.map(d => `<tr>
+          <td>${fmt(d.decided_at)}</td>
+          <td><strong>${d.symbol}</strong></td>
+          <td><span class="badge badge-${d.action.toLowerCase()}">${d.action}</span></td>
+          <td><span class="badge badge-${d.decision.toLowerCase()}">${d.decision}</span></td>
+          <td>${d.confidence}%<div class="confidence-bar"><div class="confidence-fill" style="width:${d.confidence}%;background:${d.confidence >= 70 ? '#00a040' : d.confidence >= 40 ? '#ffdd00' : '#ff4040'}"></div></div></td>
+          <td class="reasoning" title="${(d.reasoning || '').replace(/"/g, '&quot;')}">${d.reasoning || '—'}</td>
+          <td>${d.matched_strategy || '—'}</td>
+        </tr>`).join('')}
+      </table>`;
+    }
+
+    async function renderPositions() {
+      const positions = await fetchJSON(API + '/api/positions');
+      const el = document.getElementById('positions-panel');
+      if (!positions || positions.length === 0) { el.innerHTML = '<div class="empty">No positions</div>'; return; }
+
+      const open = positions.filter(p => p.status === 'OPEN');
+      const closed = positions.filter(p => p.status === 'CLOSED').slice(0, 10);
+
+      let html = '';
+      if (open.length > 0) {
+        html += `<table>
+          <tr><th>Symbol</th><th>Side</th><th>Amount</th><th>Entry</th><th>Opened</th></tr>
+          ${open.map(p => `<tr>
+            <td><strong>${p.symbol}</strong></td>
+            <td><span class="badge badge-open">${p.side}</span></td>
+            <td>$${Number(p.amount_usd).toFixed(2)}</td>
+            <td>$${Number(p.entry_price).toFixed(p.entry_price < 1 ? 6 : 2)}</td>
+            <td>${fmt(p.opened_at)}</td>
+          </tr>`).join('')}
+        </table>`;
+      }
+      if (closed.length > 0) {
+        html += `<div style="margin-top:12px;font-size:11px;color:#666;text-transform:uppercase">Recent Closed</div>
+        <table>
+          <tr><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Closed</th></tr>
+          ${closed.map(p => `<tr>
+            <td>${p.symbol}</td>
+            <td>$${Number(p.entry_price).toFixed(p.entry_price < 1 ? 6 : 2)}</td>
+            <td>$${Number(p.exit_price).toFixed(p.exit_price < 1 ? 6 : 2)}</td>
+            <td class="${pnlClass(p.pnl_usd)}">$${Number(p.pnl_usd).toFixed(2)}</td>
+            <td>${fmt(p.closed_at)}</td>
+          </tr>`).join('')}
+        </table>`;
+      }
+      el.innerHTML = html || '<div class="empty">No positions</div>';
+    }
+
+    async function renderMemory() {
+      const memory = await fetchJSON(API + '/api/memory');
+      const el = document.getElementById('memory-panel');
+      if (!memory || memory.length === 0) { el.innerHTML = '<div class="empty">No learnings yet</div>'; return; }
+
+      el.innerHTML = memory.map(m => `
+        <div class="memory-item">
+          <div class="insight">${m.insight}</div>
+          <div class="meta">${m.symbol || 'General'} &middot; ${m.source} &middot; ${fmt(m.created_at)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function renderStrategies() {
+      const strategies = await fetchJSON(API + '/api/strategies');
+      const el = document.getElementById('strategies-panel');
+      if (!strategies || strategies.length === 0) { el.innerHTML = '<div class="empty">No strategies yet — research runs weekly</div>'; return; }
+
+      el.innerHTML = `<table>
+        <tr><th>Name</th><th>Type</th><th>Indicators</th><th>Win Rate</th><th>Skepticism</th><th>Updated</th></tr>
+        ${strategies.map(s => `<tr>
+          <td><strong>${s.name}</strong><br><span style="font-size:11px;color:#888">${(s.description || '').slice(0, 80)}${(s.description || '').length > 80 ? '...' : ''}</span></td>
+          <td>${s.asset_type}</td>
+          <td style="font-size:12px">${s.indicators || '—'}</td>
+          <td>${s.claimed_win_rate != null ? s.claimed_win_rate + '%' : '—'}</td>
+          <td>${s.skepticism_score}/100<div class="confidence-bar"><div class="confidence-fill" style="width:${s.skepticism_score}%;background:${s.skepticism_score >= 70 ? '#00a040' : s.skepticism_score >= 40 ? '#ffdd00' : '#ff4040'}"></div></div></td>
+          <td>${fmt(s.last_updated)}</td>
+        </tr>`).join('')}
+      </table>`;
+    }
+
+    async function refresh() {
+      await Promise.all([
+        renderStats(),
+        renderDecisions(),
+        renderPositions(),
+        renderMemory(),
+        renderStrategies(),
+      ]);
+    }
+
+    refresh();
+    setInterval(refresh, 30000);
+  </script>
+</body>
+</html>
