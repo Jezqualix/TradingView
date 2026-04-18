@@ -6,19 +6,23 @@ const { storeSignal } = require('./signalHandler');
 const { analyze } = require('./claudeAnalyzer');
 const { executeTrade } = require('./paperTrader');
 const { notify } = require('./notifier');
-const finnhub = require('./finnhub');
-
-let yahooFinance = null;
-(async () => {
-  try {
-    yahooFinance = (await import('yahoo-finance2')).default;
-  } catch (err) {
-    console.warn('[YAHOO] Import failed, using fallback:', err.message);
-  }
-})();
+const massive = require('./massive');
+const { refreshAll, refreshOne } = require('./snapshotService');
 
 const app = express();
 app.use(express.json());
+
+const exchangeCache = { stocks: [], crypto: [] };
+
+async function preloadExchanges() {
+  try {
+    exchangeCache.stocks = await massive.getExchanges('stocks');
+    exchangeCache.crypto = await massive.getExchanges('crypto');
+    console.log(`[MASSIVE] Loaded ${exchangeCache.stocks.length} stock exchanges, ${exchangeCache.crypto.length} crypto exchanges`);
+  } catch (err) {
+    console.warn('[MASSIVE] Failed to preload exchanges:', err.message);
+  }
+}
 
 // Serve dashboard
 app.use(express.static(path.join(__dirname, 'dashboard')));
@@ -32,103 +36,48 @@ app.get('/health', (req, res) => {
 app.get('/api/symbols', async (req, res) => {
   try {
     const pool = await getDb();
-
-    // Get unique symbols from signals
-    const symbolResult = await pool.request().query(`
-      SELECT DISTINCT symbol FROM signals ORDER BY symbol
+    const result = await pool.request().query(`
+      SELECT
+        t.id, t.symbol, t.name, t.asset_type, t.exchange,
+        s.price, s.[open], s.high, s.low, s.prev_close,
+        s.volume, s.vwap, s.change, s.change_pct,
+        s.bid, s.ask, s.fetched_at
+      FROM tickers t
+      LEFT JOIN ticker_snapshots s ON s.ticker_id = t.id
+      WHERE t.is_active = 1
+      ORDER BY t.symbol
     `);
-
-    if (symbolResult.recordset.length === 0) {
-      return res.json([]);
-    }
-
-    const symbols = symbolResult.recordset.map(s => s.symbol);
-
-    // Get open positions per symbol
-    const positionsResult = await pool.request().query(`
-      SELECT DISTINCT symbol FROM positions WHERE status = 'OPEN'
-    `);
-    const openSymbols = new Set(positionsResult.recordset.map(p => p.symbol));
-
-    // Get latest signal per symbol
-    const latestSignalsResult = await pool.request().query(`
-      SELECT symbol, action, price, received_at FROM signals
-      WHERE (symbol, received_at) IN (
-        SELECT symbol, MAX(received_at) FROM signals GROUP BY symbol
-      )
-      ORDER BY symbol
-    `);
-    const signalMap = Object.fromEntries(latestSignalsResult.recordset.map(s => [s.symbol, s]));
-
-    // Map symbols to Yahoo Finance format
-    const yahooSymbols = symbols.map(s => {
-      if (/USDT$/.test(s)) {
-        return s.replace('USDT', '-USD');
-      }
-      return s;
-    });
-
-    // Fetch live quotes from Yahoo Finance
-    let quotes = {};
-    if (yahooFinance) {
-      try {
-        const queryOptions = { lang: 'en' };
-        for (const ySymbol of yahooSymbols) {
-          try {
-            const quote = await yahooFinance.quote(ySymbol, {}, queryOptions);
-            quotes[ySymbol] = quote;
-          } catch (err) {
-            console.warn(`[YAHOO] Failed to fetch ${ySymbol}:`, err.message);
-            quotes[ySymbol] = null;
-          }
-        }
-      } catch (err) {
-        console.error('[YAHOO] Quote batch failed:', err.message);
-      }
-    } else {
-      console.warn('[YAHOO] Module not loaded, returning empty quotes');
-    }
-
-    // Fetch Finnhub quotes in parallel
-    const finnhubQuotes = {};
-    if (finnhub.isConfigured()) {
-      for (const symbol of symbols) {
-        try {
-          const quote = await finnhub.getQuote(symbol);
-          finnhubQuotes[symbol] = quote;
-        } catch (err) {
-          console.warn(`[FINNHUB] Failed to fetch ${symbol}:`, err.message);
-          finnhubQuotes[symbol] = null;
-        }
-      }
-    }
-
-    // Build response
-    const result = symbols.map(symbol => {
-      const ySymbol = yahooSymbols[symbols.indexOf(symbol)];
-      const quote = quotes[ySymbol];
-      const signal = signalMap[symbol];
-      const finnhubQuote = finnhubQuotes[symbol];
-
-      return {
-        symbol,
-        yahooSymbol: ySymbol,
-        yahoo: quote ? {
-          price: quote.regularMarketPrice || null,
-          change: quote.regularMarketChange || null,
-          changePercent: quote.regularMarketChangePercent || null,
-          currency: quote.currency || 'USD',
-          exchange: quote.exchange || null,
-        } : null,
-        finnhub: finnhubQuote || null,
-        lastSignal: signal ? { action: signal.action, price: signal.price, time: signal.received_at } : null,
-        hasOpenPosition: openSymbols.has(symbol),
-      };
-    });
-
-    res.json(result);
+    res.json(result.recordset);
   } catch (err) {
     console.error('[SYMBOLS API]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/exchanges', (req, res) => {
+  const type = req.query.type === 'crypto' ? 'crypto' : 'stocks';
+  res.json(exchangeCache[type]);
+});
+
+app.post('/api/snapshots/refresh', async (req, res) => {
+  try {
+    const result = await refreshAll();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/snapshots/refresh/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Invalid ID' });
+    }
+    const snapshot = await refreshOne(id);
+    if (!snapshot) return res.status(404).json({ error: 'Ticker not found or snapshot failed' });
+    res.json(snapshot);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -221,11 +170,6 @@ app.get('/api/strategies', async (req, res) => {
   }
 });
 
-// Finnhub status endpoint
-app.get('/api/finnhub/status', (req, res) => {
-  res.json(finnhub.getStatus());
-});
-
 // Ticker lookup endpoint
 app.get('/api/lookup-ticker', async (req, res) => {
   try {
@@ -234,7 +178,7 @@ app.get('/api/lookup-ticker', async (req, res) => {
       return res.status(400).json({ error: 'Symbol required' });
     }
 
-    const result = await finnhub.searchSymbol(symbol);
+    const result = await massive.lookupTicker(symbol);
     if (!result) {
       return res.json(null);
     }
@@ -243,7 +187,7 @@ app.get('/api/lookup-ticker', async (req, res) => {
       symbol: result.symbol,
       name: result.name,
       exchange: result.exchange,
-      isCrypto: result.type === 'CRYPTO' || result.symbol?.includes('USDT'),
+      isCrypto: result.market === 'crypto',
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -481,9 +425,12 @@ async function start() {
   await getDb();
   console.log('Connected to MSSQL');
 
-  // Strategy researcher cron (loaded after server starts)
   const { startCron } = require('./strategyResearcher');
   startCron();
+
+  await preloadExchanges();
+  await refreshAll();
+  setInterval(refreshAll, 5 * 60 * 1000);
 
   app.listen(config.port, () => {
     console.log(`TradingView x Claude running on port ${config.port}`);
