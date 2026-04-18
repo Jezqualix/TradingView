@@ -2,25 +2,39 @@ const config = require('./config');
 
 const BASE = 'https://api.massive.com';
 
+function _getFetch() {
+  if (typeof global.fetch === 'function') return global.fetch;
+  try { return require('node-fetch'); } catch { return null; }
+}
+
+async function _fetch(url, timeoutMs) {
+  const fetch = _getFetch();
+  if (!fetch) {
+    console.warn('[MASSIVE] fetch not available');
+    return null;
+  }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      headers: { Authorization: `Bearer ${config.massive.apiKey}` },
+      signal: ctrl.signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`Request timed out after ${timeoutMs}ms`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function lookupTicker(symbol) {
   if (!isConfigured()) return null;
 
   try {
     const url = `${BASE}/v3/reference/tickers/${encodeURIComponent(symbol.toUpperCase())}`;
-
-    const fetch = typeof global.fetch === 'function'
-      ? global.fetch
-      : (() => { try { return require('node-fetch'); } catch { return null; } })();
-
-    if (!fetch) {
-      console.warn('[MASSIVE] fetch not available');
-      return null;
-    }
-
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${config.massive.apiKey}` },
-      timeout: 5000,
-    });
+    const res = await _fetch(url, 5000);
+    if (!res) return null;
 
     if (!res.ok) {
       console.warn(`[MASSIVE] HTTP ${res.status} for ${symbol}`);
@@ -50,17 +64,8 @@ async function getSnapshot(symbol, assetType) {
 
   try {
     const url = `${BASE}/v2/snapshot/locale/us/markets/stocks/tickers/${encodeURIComponent(symbol.toUpperCase())}`;
-
-    const fetch = typeof global.fetch === 'function'
-      ? global.fetch
-      : (() => { try { return require('node-fetch'); } catch { return null; } })();
-
-    if (!fetch) return null;
-
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${config.massive.apiKey}` },
-      timeout: 8000,
-    });
+    const res = await _fetch(url, 8000);
+    if (!res) return null;
 
     if (!res.ok) {
       console.warn(`[MASSIVE] Snapshot HTTP ${res.status} for ${symbol}`);
@@ -95,17 +100,8 @@ async function getExchanges(assetClass) {
 
   try {
     const url = `${BASE}/v3/reference/exchanges?asset_class=${encodeURIComponent(assetClass)}`;
-
-    const fetch = typeof global.fetch === 'function'
-      ? global.fetch
-      : (() => { try { return require('node-fetch'); } catch { return null; } })();
-
-    if (!fetch) return [];
-
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${config.massive.apiKey}` },
-      timeout: 8000,
-    });
+    const res = await _fetch(url, 8000);
+    if (!res) return [];
 
     if (!res.ok) {
       console.warn(`[MASSIVE] Exchanges HTTP ${res.status} for ${assetClass}`);

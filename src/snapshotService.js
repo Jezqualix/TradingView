@@ -55,7 +55,7 @@ async function _upsertSnapshot(pool, tickerId, symbol, assetType) {
     if (!snap) return false;
 
     await pool.request()
-      .input('ticker_id',  sql.Int,          tickerId)
+      .input('ticker_id',  sql.BigInt,       tickerId)
       .input('price',      sql.Decimal(18,6), snap.price)
       .input('open',       sql.Decimal(18,6), snap.open)
       .input('high',       sql.Decimal(18,6), snap.high)

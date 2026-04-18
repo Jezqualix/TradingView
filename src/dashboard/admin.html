@@ -992,8 +992,6 @@
 
         if (data && data.symbol) {
           nameInput.value = data.name || '';
-          if (data.exchange) exchangeInput.value = data.exchange;
-
           const assetType = data.isCrypto ? 'CRYPTO' : 'STOCK';
           typeInputs.forEach(input => {
             input.checked = input.value === assetType;
@@ -1033,7 +1031,6 @@
         title.textContent = 'Ticker toevoegen';
         symbolInput.value = '';
         nameInput.value = '';
-        exchangeInput.value = '';
         activeCheckbox.checked = true;
         typeInputs[0].checked = true;
         modalTickerId = null;
@@ -1042,7 +1039,6 @@
         title.textContent = 'Ticker bewerken';
         symbolInput.value = rowData.symbol || '';
         nameInput.value = rowData.name || '';
-        exchangeInput.value = rowData.exchange || '';
         activeCheckbox.checked = rowData.is_active;
         typeInputs.forEach(input => {
           input.checked = input.value === (rowData.asset_type || 'STOCK');
