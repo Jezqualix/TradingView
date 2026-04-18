@@ -1,22 +1,33 @@
 const { getDb, sql } = require('./db');
 const massive = require('./massive');
 
+let _refreshInProgress = false;
+
 async function refreshAll() {
-  const pool = await getDb();
-  const result = await pool.request().query(
-    `SELECT id, symbol, asset_type FROM tickers WHERE is_active = 1`
-  );
-
-  let refreshed = 0;
-  let failed = 0;
-
-  for (const ticker of result.recordset) {
-    const ok = await _upsertSnapshot(pool, ticker.id, ticker.symbol, ticker.asset_type);
-    if (ok) refreshed++; else failed++;
+  if (_refreshInProgress) {
+    console.log('[SNAPSHOT] Refresh already in progress, skipping');
+    return { refreshed: 0, failed: 0, skipped: true };
   }
+  _refreshInProgress = true;
+  try {
+    const pool = await getDb();
+    const result = await pool.request().query(
+      `SELECT id, symbol, asset_type FROM tickers WHERE is_active = 1`
+    );
 
-  console.log(`[SNAPSHOT] Refreshed ${refreshed} tickers, ${failed} failed`);
-  return { refreshed, failed };
+    let refreshed = 0;
+    let failed = 0;
+
+    for (const ticker of result.recordset) {
+      const ok = await _upsertSnapshot(pool, ticker.id, ticker.symbol, ticker.asset_type);
+      if (ok) refreshed++; else failed++;
+    }
+
+    console.log(`[SNAPSHOT] Refreshed ${refreshed} tickers, ${failed} failed`);
+    return { refreshed, failed };
+  } finally {
+    _refreshInProgress = false;
+  }
 }
 
 async function refreshOne(tickerId) {

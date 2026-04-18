@@ -428,15 +428,16 @@ async function start() {
   const { startCron } = require('./strategyResearcher');
   startCron();
 
-  await preloadExchanges();
-  await refreshAll();
-  setInterval(refreshAll, 5 * 60 * 1000);
-
   app.listen(config.port, () => {
     console.log(`TradingView x Claude running on port ${config.port}`);
     console.log(`Dashboard: http://localhost:${config.port}`);
     console.log(`Webhook:   POST http://localhost:${config.port}/webhook`);
   });
+
+  // Non-blocking warm-up after server is accepting connections
+  await preloadExchanges();
+  await refreshAll();
+  setInterval(() => refreshAll().catch(err => console.error('[SNAPSHOT] Cron error:', err.message)), 5 * 60 * 1000);
 }
 
 start().catch(err => {
