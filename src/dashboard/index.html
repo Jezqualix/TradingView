@@ -157,62 +157,104 @@
     .ticker-card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
-      border-top: 3px solid var(--brand-600);
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 16px;
       box-shadow: var(--shadow-card);
       transition: all var(--transition);
-      cursor: default;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
     .ticker-card:hover {
-      border-top-color: var(--accent);
-      transform: translateY(-3px);
       box-shadow: var(--shadow-hover);
+      border-color: var(--brand-700);
     }
-
-    .ticker-symbol {
+    .ticker-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .ticker-card-header-left .ticker-symbol {
       font-size: 1.1rem;
       font-weight: 700;
       color: var(--text-primary);
-      margin-bottom: 8px;
+      letter-spacing: 0.02em;
     }
-
+    .ticker-card-header-left .ticker-name {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+    .ticker-card-header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ticker-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px 6px;
+    }
+    .ticker-refresh-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 2px 4px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition);
+      line-height: 1;
+    }
+    .ticker-refresh-btn:hover { color: var(--brand-600); }
+    .ticker-refresh-btn.spinning { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ticker-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
     .ticker-price {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 700;
       color: var(--text-primary);
-      margin-bottom: 4px;
+      line-height: 1;
     }
-
     .ticker-change {
-      display: flex;
-      gap: 12px;
-      align-items: baseline;
-      margin-bottom: 12px;
+      font-size: 0.85rem;
       font-weight: 600;
     }
-
     .ticker-change.positive { color: var(--brand-600); }
     .ticker-change.negative { color: #ff6666; }
-    .ticker-change-pct { font-size: 1rem; }
-    .ticker-change-abs { font-size: 0.9rem; opacity: 0.8; }
-
-    .ticker-signal {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 8px;
+    .ticker-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
     }
-
-    .ticker-signal.buy { background: rgba(0, 160, 64, 0.2); color: var(--brand-600); }
-    .ticker-signal.sell { background: rgba(255, 100, 100, 0.2); color: #ff6666; }
-    .ticker-time { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
-    .ticker-position { display: inline-block; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--accent); color: var(--brand-900); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-left: 8px; }
-    .ticker-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .ticker-stat { display: flex; flex-direction: column; gap: 1px; }
+    .ticker-stat .stat-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .ticker-stat .stat-value { font-size: 0.82rem; font-weight: 500; color: var(--text-body); }
+    .ticker-stat .stat-value.up { color: var(--brand-600); }
+    .ticker-stat .stat-value.down { color: #ff6666; }
+    .ticker-footer { font-size: 0.7rem; color: var(--text-muted); text-align: right; }
+    .ticker-no-data { font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 8px 0; }
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
     .empty-state h3 { color: var(--text-primary); margin-bottom: 8px; }
@@ -240,7 +282,9 @@
   <header>
     <h1>TradingView <span>×</span> Claude</h1>
     <div class="header-links">
-      <span id="finnhub-status" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.9rem;">● Finnhub</span>
+      <button id="global-refresh-btn" onclick="triggerRefresh()" style="background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:6px 12px;border-radius:var(--radius-pill);font-size:0.85rem;transition:all var(--transition)">
+        <span id="refresh-icon" style="display:inline-block">&#8635;</span> Refresh
+      </button>
       <a href="/dashboard.html" class="header-link">📊 Dashboard</a>
       <a href="/admin.html" class="header-link">⚙️ Beheer</a>
     </div>
@@ -319,114 +363,156 @@
       }
     }
 
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatVol(v) {
+      if (v == null) return '—';
+      if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+      if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K';
+      return String(v);
+    }
+
+    function buildCard(ticker) {
+      const card = document.createElement('div');
+      card.className = 'ticker-card';
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'ticker-card-header';
+
+      const left = document.createElement('div');
+      left.className = 'ticker-card-header-left';
+      const symbolEl = document.createElement('div');
+      symbolEl.className = 'ticker-symbol';
+      symbolEl.textContent = ticker.symbol;
+      const nameEl = document.createElement('div');
+      nameEl.className = 'ticker-name';
+      nameEl.title = ticker.name || '';
+      nameEl.textContent = ticker.name || '—';
+      left.appendChild(symbolEl);
+      left.appendChild(nameEl);
+
+      const right = document.createElement('div');
+      right.className = 'ticker-card-header-right';
+      if (ticker.exchange) {
+        const exBadge = document.createElement('span');
+        exBadge.className = 'ticker-badge';
+        exBadge.textContent = ticker.exchange;
+        right.appendChild(exBadge);
+      }
+      const typeBadge = document.createElement('span');
+      typeBadge.className = 'ticker-badge';
+      typeBadge.textContent = ticker.asset_type;
+      right.appendChild(typeBadge);
+
+      const refreshBtn = document.createElement('button');
+      refreshBtn.className = 'ticker-refresh-btn';
+      refreshBtn.title = 'Refresh';
+      refreshBtn.textContent = '⟳';
+      refreshBtn.onclick = () => refreshOneTicker(ticker.id, refreshBtn);
+      right.appendChild(refreshBtn);
+
+      header.appendChild(left);
+      header.appendChild(right);
+      card.appendChild(header);
+
+      if (ticker.price != null) {
+        const isUp = (ticker.change_pct ?? 0) >= 0;
+
+        // Price row
+        const priceRow = document.createElement('div');
+        priceRow.className = 'ticker-price-row';
+        const priceEl = document.createElement('div');
+        priceEl.className = 'ticker-price';
+        priceEl.textContent = '$' + formatPrice(ticker.price);
+        const changeEl = document.createElement('div');
+        changeEl.className = 'ticker-change ' + (isUp ? 'positive' : 'negative');
+        const arrow = isUp ? '▲' : '▼';
+        const absChange = ticker.change != null ? ' $' + Math.abs(parseFloat(ticker.change)).toFixed(2) : '';
+        const pctChange = ticker.change_pct != null ? ' (' + Math.abs(parseFloat(ticker.change_pct)).toFixed(2) + '%)' : '';
+        changeEl.textContent = arrow + absChange + pctChange;
+        priceRow.appendChild(priceEl);
+        priceRow.appendChild(changeEl);
+        card.appendChild(priceRow);
+
+        // Stat grid
+        const statGrid = document.createElement('div');
+        statGrid.className = 'ticker-stat-grid';
+        const stats = [
+          { label: 'HIGH',   value: ticker.high,       cls: 'up' },
+          { label: 'LOW',    value: ticker.low,         cls: 'down' },
+          { label: 'OPEN',   value: ticker.open,        cls: '' },
+          { label: 'PREV',   value: ticker.prev_close,  cls: '' },
+          { label: 'VOLUME', value: null,               cls: '', raw: formatVol(ticker.volume) },
+          { label: 'VWAP',   value: ticker.vwap,        cls: '' },
+        ];
+        stats.forEach(s => {
+          const stat = document.createElement('div');
+          stat.className = 'ticker-stat';
+          const lbl = document.createElement('span');
+          lbl.className = 'stat-label';
+          lbl.textContent = s.label;
+          const val = document.createElement('span');
+          val.className = 'stat-value' + (s.cls ? ' ' + s.cls : '');
+          val.textContent = s.raw != null ? s.raw : ('$' + formatPrice(s.value));
+          stat.appendChild(lbl);
+          stat.appendChild(val);
+          statGrid.appendChild(stat);
+        });
+        card.appendChild(statGrid);
+
+        // Footer timestamp
+        if (ticker.fetched_at) {
+          const footer = document.createElement('div');
+          footer.className = 'ticker-footer';
+          footer.textContent = 'Bijgewerkt om ' + new Date(ticker.fetched_at).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+          card.appendChild(footer);
+        }
+      } else {
+        const noData = document.createElement('div');
+        noData.className = 'ticker-no-data';
+        noData.textContent = ticker.asset_type === 'CRYPTO'
+          ? 'Crypto snapshot niet beschikbaar'
+          : 'Geen data — wacht op refresh';
+        card.appendChild(noData);
+      }
+
+      return card;
+    }
+
     async function loadTickers() {
       try {
         const data = await fetch(API + '/api/symbols').then(r => r.json());
         const grid = document.getElementById('ticker-grid');
-        grid.innerHTML = '';
+        grid.textContent = '';
 
         if (data.length === 0) {
           const empty = document.createElement('div');
           empty.className = 'empty-state';
           empty.style.gridColumn = '1 / -1';
           const h3 = document.createElement('h3');
-          h3.textContent = 'Geen signalen ontvangen';
+          h3.textContent = 'Geen tickers geconfigureerd';
           const p = document.createElement('p');
-          p.textContent = 'Zodra TradingView signalen verzendt, verschijnen de koersen hier.';
+          p.textContent = 'Voeg tickers toe via Admin.';
           empty.appendChild(h3);
           empty.appendChild(p);
           grid.appendChild(empty);
           return;
         }
 
-        data.forEach(ticker => {
-          const card = document.createElement('div');
-          card.className = 'ticker-card';
-
-          const symbol = document.createElement('div');
-          symbol.className = 'ticker-symbol';
-          symbol.textContent = ticker.yahooSymbol || ticker.symbol;
-          card.appendChild(symbol);
-
-          // Dual price display: Yahoo + IBKR
-          const pricesContainer = document.createElement('div');
-          pricesContainer.style.cssText = 'display: grid; grid-template-columns: 1fr' + (ticker.ibkr ? ' 1fr' : '') + '; gap: 12px; padding: 12px 0;';
-
-          // Yahoo Finance price
-          if (ticker.yahoo) {
-            const yahooCol = document.createElement('div');
-            const yahooLabel = document.createElement('div');
-            yahooLabel.style.cssText = 'font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;';
-            yahooLabel.textContent = 'Yahoo';
-
-            const yahooPrice = document.createElement('div');
-            yahooPrice.style.cssText = 'font-size: 1.2rem; font-weight: 700; color: var(--text-primary);';
-            yahooPrice.textContent = '$' + formatPrice(ticker.yahoo.price);
-
-            const yahooChange = document.createElement('div');
-            yahooChange.style.cssText = 'font-size: 0.85rem; font-weight: 600; color: ' + (ticker.yahoo.changePercent >= 0 ? 'var(--brand-600)' : '#ff6666') + ';';
-            yahooChange.textContent = (ticker.yahoo.changePercent >= 0 ? '▲' : '▼') + ' ' + ticker.yahoo.changePercent.toFixed(2) + '%';
-
-            yahooCol.appendChild(yahooLabel);
-            yahooCol.appendChild(yahooPrice);
-            yahooCol.appendChild(yahooChange);
-            pricesContainer.appendChild(yahooCol);
-          }
-
-          // Finnhub price (if available)
-          if (ticker.finnhub) {
-            const finnhubCol = document.createElement('div');
-            const finnhubLabel = document.createElement('div');
-            finnhubLabel.style.cssText = 'font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;';
-            finnhubLabel.textContent = 'Finnhub';
-
-            const finnhubPrice = document.createElement('div');
-            finnhubPrice.style.cssText = 'font-size: 1.2rem; font-weight: 700; color: var(--text-primary);';
-            finnhubPrice.textContent = '$' + formatPrice(ticker.finnhub.price);
-
-            const finnhubChange = document.createElement('div');
-            finnhubChange.style.cssText = 'font-size: 0.85rem; font-weight: 600; color: ' + (ticker.finnhub.changePercent >= 0 ? 'var(--brand-600)' : '#ff6666') + ';';
-            finnhubChange.textContent = (ticker.finnhub.changePercent >= 0 ? '▲' : '▼') + ' ' + ticker.finnhub.changePercent.toFixed(2) + '%';
-
-            finnhubCol.appendChild(finnhubLabel);
-            finnhubCol.appendChild(finnhubPrice);
-            finnhubCol.appendChild(finnhubChange);
-            pricesContainer.appendChild(finnhubCol);
-          }
-
-          card.appendChild(pricesContainer);
-
-          if (ticker.lastSignal) {
-            const signal = document.createElement('span');
-            signal.className = 'ticker-signal ' + (ticker.lastSignal.action?.toUpperCase() === 'BUY' ? 'buy' : 'sell');
-            signal.textContent = ticker.lastSignal.action;
-
-            const time = document.createElement('span');
-            time.className = 'ticker-time';
-            time.textContent = timeAgo(ticker.lastSignal.time);
-
-            signal.appendChild(time);
-            card.appendChild(signal);
-          }
-
-          if (ticker.hasOpenPosition) {
-            const pos = document.createElement('span');
-            pos.className = 'ticker-position';
-            pos.textContent = '● OPEN';
-            card.appendChild(pos);
-          }
-
-          const meta = document.createElement('div');
-          meta.className = 'ticker-meta';
-          meta.textContent = ticker.yahoo?.exchange || (ticker.yahooSymbol?.includes('-') ? 'Crypto' : 'Stock');
-          card.appendChild(meta);
-
-          grid.appendChild(card);
-        });
+        data.forEach(ticker => grid.appendChild(buildCard(ticker)));
       } catch (err) {
         console.error('Failed to load tickers:', err);
         const grid = document.getElementById('ticker-grid');
-        grid.innerHTML = '';
+        grid.textContent = '';
         const empty = document.createElement('div');
         empty.className = 'empty-state';
         empty.style.gridColumn = '1 / -1';
@@ -440,32 +526,37 @@
       }
     }
 
-    async function updateFinnhubStatus() {
+    async function triggerRefresh() {
+      const btn = document.getElementById('global-refresh-btn');
+      const icon = document.getElementById('refresh-icon');
+      btn.disabled = true;
+      icon.style.animation = 'spin 0.8s linear infinite';
       try {
-        const status = await fetch(API + '/api/finnhub/status').then(r => r.json());
-        const el = document.getElementById('finnhub-status');
-        if (status.configured) {
-          el.style.color = 'var(--brand-600)';
-          el.textContent = '● Finnhub';
-        } else {
-          el.style.color = 'var(--text-muted)';
-          el.textContent = '○ Finnhub';
-        }
-      } catch (err) {
-        console.warn('Finnhub status check failed:', err);
-        document.getElementById('finnhub-status').style.color = 'var(--text-muted)';
+        await fetch('/api/snapshots/refresh', { method: 'POST' });
+        await loadTickers();
+      } finally {
+        btn.disabled = false;
+        icon.style.animation = '';
+      }
+    }
+
+    async function refreshOneTicker(id, btn) {
+      btn.classList.add('spinning');
+      try {
+        await fetch('/api/snapshots/refresh/' + id, { method: 'POST' });
+        await loadTickers();
+      } finally {
+        btn.classList.remove('spinning');
       }
     }
 
     function refresh() {
       loadPortfolio();
       loadTickers();
-      updateFinnhubStatus();
     }
 
     refresh();
     setInterval(refresh, 60000);
-    setInterval(updateFinnhubStatus, 30000); // Check Finnhub status every 30s
   </script>
 </body>
 </html>
