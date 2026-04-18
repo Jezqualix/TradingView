@@ -680,15 +680,17 @@
         <div class="form-group radio">
           <label>Type *</label>
           <label>
-            <input type="radio" name="tickerType" value="STOCK" checked> STOCK
+            <input type="radio" name="tickerType" value="STOCK" checked onchange="loadExchangeDropdown('STOCK')"> STOCK
           </label>
           <label>
-            <input type="radio" name="tickerType" value="CRYPTO"> CRYPTO
+            <input type="radio" name="tickerType" value="CRYPTO" onchange="loadExchangeDropdown('CRYPTO')"> CRYPTO
           </label>
         </div>
         <div class="form-group">
           <label for="tickerExchange">Exchange</label>
-          <input type="text" id="tickerExchange" placeholder="Bijv. NASDAQ, BINANCE">
+          <select id="tickerExchange">
+            <option value="">— kies exchange —</option>
+          </select>
         </div>
         <div class="form-group checkbox">
           <input type="checkbox" id="tickerActive" checked>
@@ -949,6 +951,29 @@
     let modalMode = 'create';
     let modalTickerId = null;
 
+    async function loadExchangeDropdown(assetType, selectedValue) {
+      const select = document.getElementById('tickerExchange');
+      const current = selectedValue !== undefined ? selectedValue : select.value;
+      while (select.options.length > 0) select.remove(0);
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = '— kies exchange —';
+      select.appendChild(defaultOpt);
+      try {
+        const type = assetType === 'CRYPTO' ? 'crypto' : 'stocks';
+        const exchanges = await fetch('/api/exchanges?type=' + type).then(r => r.json());
+        exchanges.forEach(ex => {
+          const opt = document.createElement('option');
+          opt.value = ex.value;
+          opt.textContent = ex.label;
+          if (ex.value === current) opt.selected = true;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.warn('Failed to load exchanges:', err);
+      }
+    }
+
     async function lookupTicker(symbol) {
       if (!symbol || symbol.trim().length === 0) return;
 
@@ -967,9 +992,8 @@
 
         if (data && data.symbol) {
           nameInput.value = data.name || '';
-          exchangeInput.value = data.exchange || '';
+          if (data.exchange) exchangeInput.value = data.exchange;
 
-          // Set asset type based on isCrypto flag
           const assetType = data.isCrypto ? 'CRYPTO' : 'STOCK';
           typeInputs.forEach(input => {
             input.checked = input.value === assetType;
@@ -1012,6 +1036,7 @@
         activeCheckbox.checked = true;
         typeInputs[0].checked = true;
         modalTickerId = null;
+        loadExchangeDropdown('STOCK', '');
       } else if (mode === 'edit' && rowData) {
         title.textContent = 'Ticker bewerken';
         symbolInput.value = rowData.symbol || '';
@@ -1021,6 +1046,7 @@
         typeInputs.forEach(input => {
           input.checked = input.value === (rowData.asset_type || 'STOCK');
         });
+        loadExchangeDropdown(rowData.asset_type, rowData.exchange || '');
         modalTickerId = rowData.id;
       }
 
