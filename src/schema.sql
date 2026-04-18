@@ -87,3 +87,24 @@ CREATE TABLE tickers (
   is_active  BIT           NOT NULL DEFAULT 1,
   created_at DATETIME2     NOT NULL DEFAULT GETDATE()
 );
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ticker_snapshots')
+CREATE TABLE ticker_snapshots (
+  id           BIGINT IDENTITY(1,1) PRIMARY KEY,
+  ticker_id    BIGINT NOT NULL REFERENCES tickers(id) ON DELETE CASCADE,
+  price        DECIMAL(18,6)  NULL,
+  [open]       DECIMAL(18,6)  NULL,
+  high         DECIMAL(18,6)  NULL,
+  low          DECIMAL(18,6)  NULL,
+  prev_close   DECIMAL(18,6)  NULL,
+  volume       BIGINT         NULL,
+  vwap         DECIMAL(18,6)  NULL,
+  change       DECIMAL(18,6)  NULL,
+  change_pct   DECIMAL(10,4)  NULL,
+  bid          DECIMAL(18,6)  NULL,
+  ask          DECIMAL(18,6)  NULL,
+  fetched_at   DATETIME2      NOT NULL DEFAULT GETDATE()
+);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'UX_ticker_snapshots_ticker_id')
+CREATE UNIQUE INDEX UX_ticker_snapshots_ticker_id ON ticker_snapshots(ticker_id);
